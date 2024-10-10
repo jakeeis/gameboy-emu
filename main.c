@@ -29,16 +29,16 @@ int main(void)
     //     print_reg(cpu);
     // }
 
-    for (int i = 0x00; i < 0x100; i++)
-    {
-        int numFailed = run_test(i);
+    // for (int i = 0x00; i < 0x100; i++)
+    // {
+    //     int numFailed = run_test(i);
 
-        if (numFailed > 0)
-        {
-            printf("%d tests failed for opcode: 0x%02x\n", numFailed, i);
-            break;
-        }
-    }
+    //     if (numFailed > 0)
+    //     {
+    //         printf("%d tests failed for opcode: 0x%02x\n", numFailed, i);
+    //         break;
+    //     }
+    // }
 
     for (int i = 0x00; i < 0x100; i++)
     {

@@ -806,6 +806,182 @@ int rst(CPU* cpu, uint8_t inst)
 
 int cb(CPU* cpu, uint8_t inst);
 
+int rlc(CPU* cpu, uint8_t inst)
+{
+    int index = inst & 0b111;
+    uint8_t* reg = get_reg_8(cpu, index);
+
+    cpu->n = 0;
+    cpu->half_carry = 0;
+    cpu->carry = *reg >> 7;
+
+    *reg <<= 1;
+    *reg |= cpu->carry;
+
+    cpu->z = *reg == 0;
+
+    return index == 6 ? 4 : 2;
+}
+
+int rrc(CPU* cpu, uint8_t inst)
+{
+    int index = inst & 0b111;
+    uint8_t* reg = get_reg_8(cpu, index);
+
+    cpu->n = 0;
+    cpu->half_carry = 0;
+    cpu->carry = *reg & 1;
+
+    *reg >>= 1;
+    *reg |= cpu->carry << 7;
+
+    cpu->z = *reg == 0;
+
+    return index == 6 ? 4 : 2;
+}
+
+int rl(CPU* cpu, uint8_t inst)
+{
+    int index = inst & 0b111;
+    uint8_t* reg = get_reg_8(cpu, index);
+    bool oldCarry = cpu->carry;
+
+    cpu->n = 0;
+    cpu->half_carry = 0;
+    cpu->carry = *reg >> 7;
+
+    *reg <<= 1;
+    *reg |= oldCarry;
+
+    cpu->z = *reg == 0;
+
+    return index == 6 ? 4 : 2;
+}
+
+int rr(CPU* cpu, uint8_t inst)
+{
+    int index = inst & 0b111;
+    uint8_t* reg = get_reg_8(cpu, index);
+    bool oldCarry = cpu->carry;
+
+    cpu->n = 0;
+    cpu->half_carry = 0;
+    cpu->carry = *reg & 1;
+
+    *reg >>= 1;
+    *reg |= oldCarry << 7;
+
+    cpu->z = *reg == 0;
+
+    return index == 6 ? 4 : 2;
+}
+
+int sla(CPU* cpu, uint8_t inst)
+{
+    int index = inst & 0b111;
+    uint8_t* reg = get_reg_8(cpu, index);
+
+    cpu->n = 0;
+    cpu->half_carry = 0;
+    cpu->carry = *reg >> 7;
+
+    *reg <<= 1;
+
+    cpu->z = *reg == 0;
+
+    return index == 6 ? 4 : 2;
+}
+
+int sra(CPU* cpu, uint8_t inst)
+{
+    int index = inst & 0b111;
+    uint8_t* reg = get_reg_8(cpu, index);
+    bool oldBit7 = *reg >> 7;
+
+    cpu->n = 0;
+    cpu->half_carry = 0;
+    cpu->carry = *reg & 1;
+
+    *reg >>= 1;
+    *reg |= oldBit7 << 7;
+
+    cpu->z = *reg == 0;
+
+    return index == 6 ? 4 : 2;
+}
+
+int swap(CPU* cpu, uint8_t inst)
+{
+    int index = inst & 0b111;
+    uint8_t* reg = get_reg_8(cpu, index);
+
+    cpu->n = 0;
+    cpu->half_carry = 0;
+    cpu->carry = 0;
+
+    uint8_t temp = 0xff & *reg;
+    *reg >>= 4;
+    *reg |= temp << 4;
+
+    cpu->z = *reg == 0;
+
+    return index == 6 ? 4 : 2;
+}
+
+int srl(CPU* cpu, uint8_t inst)
+{
+    int index = inst & 0b111;
+    uint8_t* reg = get_reg_8(cpu, index);
+
+    cpu->n = 0;
+    cpu->half_carry = 0;
+    cpu->carry = *reg & 1;
+
+    *reg >>= 1;
+
+    cpu->z = *reg == 0;
+
+    return index == 6 ? 4 : 2;
+}
+
+int bit(CPU* cpu, uint8_t inst)
+{
+    int index = inst & 0b111;
+    uint8_t* reg = get_reg_8(cpu, index);
+
+    int bitIndex = (inst - 0x40) >> 3;
+
+    cpu->n = 0;
+    cpu->half_carry = 1;
+    cpu->z = !(*reg & (1 << bitIndex));
+
+    return index == 6 ? 3 : 2;
+}
+
+int res(CPU* cpu, uint8_t inst)
+{
+    int index = inst & 0b111;
+    uint8_t* reg = get_reg_8(cpu, index);
+
+    int bitIndex = (inst - 0x80) >> 3;
+
+    *reg &= ~(1 << bitIndex); 
+
+    return index == 6 ? 4 : 2;
+}
+
+int set(CPU* cpu, uint8_t inst)
+{
+    int index = inst & 0b111;
+    uint8_t* reg = get_reg_8(cpu, index);
+
+    int bitIndex = (inst - 0xc0) >> 3;
+
+    *reg |= 1 << bitIndex; 
+
+    return index == 6 ? 4 : 2;
+}
+
 int (*instruction_map[0x100])(CPU* cpu, uint8_t inst) = {
     //  x0      x1      x2      x3          x4          x5          x6          x7      x8              x9          xa          xb      xc          xd      xe          xf
         noop,   ld_16,  ld_a16, inc_16,     inc_8,      dec_8,      ld_8_d8,    rlca,   ld_a16_sp,      add_hl,     ld_a_a16,   dec_16, inc_8,      dec_8,  ld_8_d8,    rrca,   // 0x
@@ -827,7 +1003,23 @@ int (*instruction_map[0x100])(CPU* cpu, uint8_t inst) = {
 };
 
 int (*cb_instruction_map[0x100])(CPU* cpu, uint8_t inst) = {
-    noop
+    //  x0      x1      x2      x3      x4      x5      x6      x7      x8      x9      xa      xb      xc      xd      xe      xf
+        rlc,    rlc,    rlc,    rlc,    rlc,    rlc,    rlc,    rlc,    rrc,    rrc,    rrc,    rrc,    rrc,    rrc,    rrc,    rrc,    // 0x
+        rl,     rl,     rl,     rl,     rl,     rl,     rl,     rl,     rr,     rr,     rr,     rr,     rr,     rr,     rr,     rr,     // 1x
+        sla,    sla,    sla,    sla,    sla,    sla,    sla,    sla,    sra,    sra,    sra,    sra,    sra,    sra,    sra,    sra,    // 2x
+        swap,   swap,   swap,   swap,   swap,   swap,   swap,   swap,   srl,    srl,    srl,    srl,    srl,    srl,    srl,    srl,    // 3x
+        bit,    bit,    bit,    bit,    bit,    bit,    bit,    bit,    bit,    bit,    bit,    bit,    bit,    bit,    bit,    bit,    // 4x
+        bit,    bit,    bit,    bit,    bit,    bit,    bit,    bit,    bit,    bit,    bit,    bit,    bit,    bit,    bit,    bit,    // 5x
+        bit,    bit,    bit,    bit,    bit,    bit,    bit,    bit,    bit,    bit,    bit,    bit,    bit,    bit,    bit,    bit,    // 6x
+        bit,    bit,    bit,    bit,    bit,    bit,    bit,    bit,    bit,    bit,    bit,    bit,    bit,    bit,    bit,    bit,    // 7x
+        res,    res,    res,    res,    res,    res,    res,    res,    res,    res,    res,    res,    res,    res,    res,    res,    // 8x
+        res,    res,    res,    res,    res,    res,    res,    res,    res,    res,    res,    res,    res,    res,    res,    res,    // 9x
+        res,    res,    res,    res,    res,    res,    res,    res,    res,    res,    res,    res,    res,    res,    res,    res,    // ax
+        res,    res,    res,    res,    res,    res,    res,    res,    res,    res,    res,    res,    res,    res,    res,    res,    // bx
+        set,    set,    set,    set,    set,    set,    set,    set,    set,    set,    set,    set,    set,    set,    set,    set,    // cx
+        set,    set,    set,    set,    set,    set,    set,    set,    set,    set,    set,    set,    set,    set,    set,    set,    // dx
+        set,    set,    set,    set,    set,    set,    set,    set,    set,    set,    set,    set,    set,    set,    set,    set,    // ex
+        set,    set,    set,    set,    set,    set,    set,    set,    set,    set,    set,    set,    set,    set,    set,    set     // fx
 };
 
 int cb(CPU* cpu, uint8_t inst)
@@ -835,7 +1027,7 @@ int cb(CPU* cpu, uint8_t inst)
     uint8_t cbInst = get_inst(cpu);
     int cycles = cb_instruction_map[cbInst](cpu, cbInst);
 
-    return 2;
+    return cycles;
 }
 
 int execute_inst(CPU* cpu)

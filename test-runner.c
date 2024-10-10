@@ -5,7 +5,7 @@
 #include "test-runner.h"
 #include "cJSON.h"
 
-#define LOG_LEVEL 0
+#define LOG_LEVEL 2
 
 char* get_test_str(int fileIndex)
 {
